@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MospolitechProject.MainPage"
+             Title="Yume Reader">
+
+    <StackLayout Padding="0" Spacing="0" BackgroundColor="#F5F5F5">
+
+        <!-- Заголовок с проверкой API -->
+        <Frame BackgroundColor="#6200EE" HasShadow="True" CornerRadius="0" Padding="20">
+            <StackLayout>
+                <Label Text="Yume Reader" TextColor="White" FontSize="24" FontAttributes="Bold" />
+                <Label x:Name="StatusLabel" Text="Статус API: ожидание..." TextColor="#E0E0E0" FontSize="14" />
+            </StackLayout>
+        </Frame>
+
+        <StackLayout Padding="15" Spacing="10">
+            <Button Text="Проверить подключение API" 
+                    Clicked="OnCheckApiClicked" 
+                    BackgroundColor="#03DAC5" 
+                    TextColor="Black" 
+                    CornerRadius="8" />
+
+            <Label Text="Ваши книги" FontSize="18" FontAttributes="Bold" Margin="0,10,0,5" />
+
+            <!-- Список книг (БД) -->
+            <ListView x:Name="BooksListView" 
+                      HasUnevenRows="True" 
+                      SeparatorVisibility="None"
+                      BackgroundColor="Transparent">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <ViewCell>
+                            <Frame Margin="0,5" Padding="15" CornerRadius="10" HasShadow="False" BackgroundColor="White">
+                                <StackLayout Orientation="Horizontal" Spacing="15">
+                                    <BoxView Color="#6200EE" WidthRequest="4" VerticalOptions="FillAndExpand" />
+                                    <StackLayout VerticalOptions="Center">
+                                        <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="16" TextColor="Black" />
+                                        <Label Text="{Binding Author}" FontSize="14" TextColor="Gray" />
+                                    </StackLayout>
+                                </StackLayout>
+                            </Frame>
+                        </ViewCell>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackLayout>
+    </StackLayout>
+
+</ContentPage>

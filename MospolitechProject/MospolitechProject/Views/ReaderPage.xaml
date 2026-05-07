@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MospolitechProject.Views.ReaderPage"
+             BackgroundColor="#121212"
+             Title="Чтение">
+
+    <Grid RowDefinitions="*, Auto">
+        <!-- Область чтения -->
+        <ScrollView x:Name="MainScroll" Grid.Row="0" Padding="20">
+            <StackLayout>
+                <Label x:Name="ContentLabel" 
+                       TextColor="#E0E0E0" 
+                       FontSize="18" 
+                       LineHeight="1.5" 
+                       FontFamily="Serif"
+                       Text="Загрузка текста..."/>
+                <BoxView HeightRequest="50" Color="Transparent"/>
+            </StackLayout>
+        </ScrollView>
+
+        <ActivityIndicator x:Name="ReaderLoader" 
+                           IsRunning="False" 
+                           VerticalOptions="Center" 
+                           HorizontalOptions="Center" 
+                           Color="#03DAC5" />
+
+        <!-- Нижняя панель навигации -->
+        <Frame Grid.Row="1" BackgroundColor="#1E1E1E" Padding="10" CornerRadius="0">
+            <Grid ColumnDefinitions="*, *, *">
+                <Button Grid.Column="0" 
+                        Text="Назад" 
+                        Clicked="OnPrevClicked"
+                        BackgroundColor="Transparent" 
+                        TextColor="#03DAC5" 
+                        FontSize="12"/>
+
+                <Label Grid.Column="1" 
+                       x:Name="ChapterLabel" 
+                       Text="Глава 1" 
+                       TextColor="Gray" 
+                       HorizontalOptions="Center" 
+                       VerticalOptions="Center"/>
+
+                <Button Grid.Column="2" 
+                        Text="Вперед" 
+                        Clicked="OnNextClicked"
+                        BackgroundColor="Transparent" 
+                        TextColor="#03DAC5" 
+                        FontSize="12"/>
+            </Grid>
+        </Frame>
+    </Grid>
+</ContentPage>

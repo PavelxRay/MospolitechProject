@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools"
+          package="com.companyname.mospolitechproject"
+          android:versionCode="1"
+          android:versionName="1.0">
+
+	<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="33" />
+
+	<!-- Твои разрешения из Android Studio -->
+	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
+	<uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
+	<uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+	<uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+	<uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+	<uses-permission android:name="android.permission.INTERNET" />
+
+	<application android:label="Yume Reader"
+                 android:icon="@mipmap/icon"
+                 android:roundIcon="@mipmap/icon_round"
+                 android:theme="@style/MainTheme"
+                 android:requestLegacyExternalStorage="true">
+
+		<!-- Оставляем только базовые настройки. Инспекторы и провайдеры в Xamarin 
+             настраиваются автоматически или через атрибуты в C# -->
+
+	</application>
+</manifest>

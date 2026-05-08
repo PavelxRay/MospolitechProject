@@ -1,8 +1,10 @@
-﻿using System;
+﻿using MospolitechProject.Helpers;
+using MospolitechProject.Services;
+using MospolitechProject.Models;
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Xamarin.Forms;
-using MospolitechProject.Helpers;
-using MospolitechProject.Services;
 
 namespace MospolitechProject.Views
 {
@@ -34,6 +36,15 @@ namespace MospolitechProject.Views
 
                 await _dbService.Init();
                 await _dbService.SaveBook(book);
+
+                var dbChapters = _epubService.Chapters.Select((text, index) => new Chapter
+                {
+                    BookId = book.Id,
+                    Index = index,
+                    Text = text
+                }).ToList();
+
+                await _dbService.InsertChapters(dbChapters);
 
                 // 1. ОСТАНАВЛИВАЕМ спиннер сразу после записи в БД
                 LoadingLayout.IsVisible = false;

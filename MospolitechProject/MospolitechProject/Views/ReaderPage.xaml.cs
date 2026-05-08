@@ -1,15 +1,14 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Xamarin.Forms;
 using MospolitechProject.Models;
-using MospolitechProject.Helpers;
+using MospolitechProject.Services; // Нужно для DatabaseService
 
 namespace MospolitechProject.Views
 {
     public partial class ReaderPage : ContentPage
     {
-        private readonly EpubService _epubService = new EpubService();
+        private readonly DatabaseService _dbService = new DatabaseService();
         private readonly Book _currentBook;
         private int _currentChapterIndex = 0;
 
@@ -18,6 +17,9 @@ namespace MospolitechProject.Views
             InitializeComponent();
             _currentBook = book;
             Title = _currentBook.Title;
+            
+            // Начинаем с того места, где остановились
+            _currentChapterIndex = _currentBook.Progress;
         }
 
         protected override async void OnAppearing()
@@ -28,40 +30,51 @@ namespace MospolitechProject.Views
 
         private async Task LoadBookContent()
         {
-            if (string.IsNullOrEmpty(_currentBook.FilePath)) return;
-
             ReaderLoader.IsRunning = true;
-
-            // Загружаем все главы книги через сервис
-            await _epubService.LoadAllChaptersAsync(_currentBook.FilePath);
-
-            if (_epubService.Chapters.Count > 0)
-            {
-                UpdatePage(0);
-            }
-            else
-            {
-                ContentLabel.Text = "Не удалось загрузить содержимое книги.";
-            }
-
+            await _dbService.Init(); // Инициализируем БД
+            await LoadCurrentChapter();
             ReaderLoader.IsRunning = false;
         }
 
-        private void UpdatePage(int index)
+        private async Task LoadCurrentChapter()
         {
-            if (index >= 0 && index < _epubService.Chapters.Count)
+            // Берем текст из БД по ID книги и индексу главы
+            var chapter = await _dbService.GetChapter(_currentBook.Id, _currentChapterIndex);
+            
+            if (chapter != null)
             {
-                _currentChapterIndex = index;
-                ContentLabel.Text = _epubService.Chapters[index];
-                ChapterLabel.Text = $"Стр. {index + 1} из {_epubService.Chapters.Count}";
+                ContentLabel.Text = chapter.Text;
+                ChapterLabel.Text = $"Глава {_currentChapterIndex + 1}";
+                
+                // Скроллим в начало при смене главы
+                await MainScroll.ScrollToAsync(0, 0, false);
 
-                // Сбрасываем прокрутку в начало страницы
-                MainScroll.ScrollToAsync(0, 0, false);
+                // Сохраняем прогресс в модель и в БД
+                _currentBook.Progress = _currentChapterIndex;
+                await _dbService.UpdateBook(_currentBook);
+            }
+            else if (_currentChapterIndex > 0)
+            {
+                // Если главы нет (конец книги), откатываем индекс назад
+                _currentChapterIndex--;
+                await DisplayAlert("Конец", "Это последняя глава", "ОК");
             }
         }
 
-        private void OnNextClicked(object sender, EventArgs e) => UpdatePage(_currentChapterIndex + 1);
+        // Логика кнопок теперь просто меняет индекс и дергает БД
+        private async void OnNextClicked(object sender, EventArgs e)
+        {
+            _currentChapterIndex++;
+            await LoadCurrentChapter();
+        }
 
-        private void OnPrevClicked(object sender, EventArgs e) => UpdatePage(_currentChapterIndex - 1);
+        private async void OnPrevClicked(object sender, EventArgs e)
+        {
+            if (_currentChapterIndex > 0)
+            {
+                _currentChapterIndex--;
+                await LoadCurrentChapter();
+            }
+        }
     }
 }

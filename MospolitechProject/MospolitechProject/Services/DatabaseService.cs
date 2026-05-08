@@ -16,17 +16,28 @@ namespace MospolitechProject.Services
             if (_db != null) return;
             var path = Path.Combine(FileSystem.AppDataDirectory, "library.db3");
             _db = new SQLiteAsyncConnection(path);
+
+            // Создаем обе таблицы
             await _db.CreateTableAsync<Book>();
+            await _db.CreateTableAsync<Chapter>();
         }
 
+        // Работа с книгами
         public Task<List<Book>> GetBooks() => _db.Table<Book>().ToListAsync();
         public Task<int> SaveBook(Book book) => _db.InsertAsync(book);
+        public Task<int> UpdateBook(Book book) => _db.UpdateAsync(book);
+        public Task<int> DeleteBook(Book book) => _db.DeleteAsync(book);
 
-        public Task<int> DeleteBook(Book book)
-        {
-            return _db.DeleteAsync(book);
-        }
+        // Работа с главами
+        public Task InsertChapters(List<Chapter> chapters) => _db.InsertAllAsync(chapters);
+
+        public Task<Chapter> GetChapter(int bookId, int index) =>
+            _db.Table<Chapter>()
+               .Where(c => c.BookId == bookId && c.Index == index)
+               .FirstOrDefaultAsync();
+
+        // Метод для очистки глав при удалении книги
+        public Task DeleteChapters(int bookId) =>
+            _db.Table<Chapter>().Where(c => c.BookId == bookId).DeleteAsync();
     }
-
-
 }

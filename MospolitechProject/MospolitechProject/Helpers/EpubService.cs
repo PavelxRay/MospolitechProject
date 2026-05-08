@@ -1,25 +1,29 @@
-﻿using MospolitechProject.Models;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using VersOne.Epub;
+using HtmlAgilityPack;
+using MospolitechProject.Models;
 using Xamarin.Essentials;
 
 namespace MospolitechProject.Helpers
 {
     public class EpubService
     {
-        // Список для хранения текста всех глав книги
+        // Список очищенных глав для отображения
         public List<string> Chapters { get; set; } = new List<string>();
 
         public async Task<Book> ParseEpubAsync(string filePath)
         {
             EpubBook epubBook = await EpubReader.ReadBookAsync(filePath);
-            string coverPath = null;
 
+            // Наполняем список Chapters
+            ExtractChapters(epubBook);
+
+            string coverPath = null;
             if (epubBook.CoverImage != null)
             {
                 string fileName = $"{Guid.NewGuid()}.jpg";
@@ -39,36 +43,54 @@ namespace MospolitechProject.Helpers
             };
         }
 
-        // Загрузка всех глав книги в память
-        public async Task LoadAllChaptersAsync(string filePath)
+        private void ExtractChapters(EpubBook book)
+        {
+            Chapters.Clear();
+
+            // Проходим по всем элементам книги в порядке чтения
+            foreach (var resource in book.ReadingOrder)
+            {
+                string html = resource.Content;
+                if (string.IsNullOrWhiteSpace(html)) continue;
+
+                // Очищаем HTML и получаем чистый текст
+                string cleanText = CleanHtml(html);
+
+                // Добавляем, если в главе есть хоть какой-то осмысленный текст
+                if (cleanText.Length > 10)
+                {
+                    Chapters.Add(cleanText);
+                }
+            }
+        }
+
+        private string CleanHtml(string html)
         {
             try
             {
-                var epubBook = await EpubReader.ReadBookAsync(filePath);
-                Chapters.Clear();
+                var doc = new HtmlDocument();
+                doc.LoadHtml(html);
 
-                foreach (var chapter in epubBook.ReadingOrder)
+                // Удаляем технические теги (как в твоем Kotlin-коде)
+                var nodesToRemove = doc.DocumentNode.SelectNodes("//script|//style|//link|//meta");
+                if (nodesToRemove != null)
                 {
-                    string html = chapter.Content;
-
-                    // Очистка от CSS и скриптов
-                    html = Regex.Replace(html, "<style.*?>.*?</style>", string.Empty, RegexOptions.Singleline | RegexOptions.IgnoreCase);
-                    html = Regex.Replace(html, "<script.*?>.*?</script>", string.Empty, RegexOptions.Singleline | RegexOptions.IgnoreCase);
-
-                    // Удаление тегов
-                    string text = Regex.Replace(html, "<.*?>", string.Empty, RegexOptions.Singleline);
-                    string cleanedText = System.Net.WebUtility.HtmlDecode(text).Trim();
-
-                    // Добавляем только страницы, где есть текст
-                    if (!string.IsNullOrWhiteSpace(cleanedText))
-                    {
-                        Chapters.Add(cleanedText);
-                    }
+                    foreach (var node in nodesToRemove) node.Remove();
                 }
+
+                // Извлекаем текст и декодируем спецсимволы (типа &nbsp;)
+                string text = HtmlEntity.DeEntitize(doc.DocumentNode.InnerText).Trim();
+
+                // Применяем твои регулярки для очистки от мусора
+                text = Regex.Replace(text, @"\d+/\d+", ""); // Номера страниц
+                text = Regex.Replace(text, @"\s+", " ");    // Лишние пробелы
+
+                return text.Trim();
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"Ошибка: {ex.Message}");
+                // Если HtmlAgilityPack не справился, просто чистим теги регуляркой
+                return Regex.Replace(html, "<.*?>", string.Empty).Trim();
             }
         }
     }

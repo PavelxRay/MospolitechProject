@@ -37,7 +37,7 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <!-- SwipeView добавляет жест смахивания -->
-                        <SwipeView>
+                        <SwipeView BackgroundColor="#1E1E1E">
                             <SwipeView.RightItems>
                                 <SwipeItems Mode="Reveal">
                                     <SwipeItem Text="Удалить" 

@@ -17,7 +17,6 @@ namespace MospolitechProject.Services
             var path = Path.Combine(FileSystem.AppDataDirectory, "library.db3");
             _db = new SQLiteAsyncConnection(path);
 
-            // Создаем обе таблицы
             await _db.CreateTableAsync<Book>();
             await _db.CreateTableAsync<Chapter>();
         }
@@ -31,12 +30,17 @@ namespace MospolitechProject.Services
         // Работа с главами
         public Task InsertChapters(List<Chapter> chapters) => _db.InsertAllAsync(chapters);
 
+        public Task<int> UpdateChapter(Chapter chapter) => _db.UpdateAsync(chapter);
+
+        // Добавленный метод для получения списка всех глав
+        public Task<List<Chapter>> GetChaptersByBook(int bookId) =>
+            _db.Table<Chapter>().Where(c => c.BookId == bookId).ToListAsync();
+
         public Task<Chapter> GetChapter(int bookId, int index) =>
             _db.Table<Chapter>()
                .Where(c => c.BookId == bookId && c.Index == index)
                .FirstOrDefaultAsync();
 
-        // Метод для очистки глав при удалении книги
         public Task DeleteChapters(int bookId) =>
             _db.Table<Chapter>().Where(c => c.BookId == bookId).DeleteAsync();
     }

@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Xamarin.Forms;
 using MospolitechProject.Models;
-using MospolitechProject.Services; // Нужно для DatabaseService
+using MospolitechProject.Services;
 
 namespace MospolitechProject.Views
 {
@@ -17,8 +17,6 @@ namespace MospolitechProject.Views
             InitializeComponent();
             _currentBook = book;
             Title = _currentBook.Title;
-            
-            // Начинаем с того места, где остановились
             _currentChapterIndex = _currentBook.Progress;
         }
 
@@ -31,42 +29,72 @@ namespace MospolitechProject.Views
         private async Task LoadBookContent()
         {
             ReaderLoader.IsRunning = true;
-            await _dbService.Init(); // Инициализируем БД
+            await _dbService.Init();
             await LoadCurrentChapter();
             ReaderLoader.IsRunning = false;
         }
 
         private async Task LoadCurrentChapter()
         {
-            // Берем текст из БД по ID книги и индексу главы
             var chapter = await _dbService.GetChapter(_currentBook.Id, _currentChapterIndex);
-            
+
             if (chapter != null)
             {
                 ContentLabel.Text = chapter.Text;
-                ChapterLabel.Text = $"Глава {_currentChapterIndex + 1}";
-                
-                // Скроллим в начало при смене главы
+                ChapterLabel.Text = !string.IsNullOrEmpty(chapter.Title)
+                    ? chapter.Title
+                    : $"Глава {_currentChapterIndex + 1}";
+
                 await MainScroll.ScrollToAsync(0, 0, false);
 
-                // Сохраняем прогресс в модель и в БД
+                // Помечаем главу прочитанной
+                if (!chapter.IsCompleted)
+                {
+                    chapter.IsCompleted = true;
+                    await _dbService.UpdateChapter(chapter);
+                }
+
+                // Обновляем прогресс в объекте
                 _currentBook.Progress = _currentChapterIndex;
+
+                // Если дошли до конца — меняем статусы
+                if (_currentChapterIndex == _currentBook.TotalChapters - 1)
+                {
+                    _currentBook.IsFinished = true;
+                    _currentBook.IsReading = false;
+                }
+
+                // ОДИН вызов сохранения в БД в конце метода
                 await _dbService.UpdateBook(_currentBook);
-            }
-            else if (_currentChapterIndex > 0)
-            {
-                // Если главы нет (конец книги), откатываем индекс назад
-                _currentChapterIndex--;
-                await DisplayAlert("Конец", "Это последняя глава", "ОК");
             }
         }
 
-        // Логика кнопок теперь просто меняет индекс и дергает БД
         private async void OnNextClicked(object sender, EventArgs e)
         {
-            _currentChapterIndex++;
-            await LoadCurrentChapter();
+            if (_currentChapterIndex < _currentBook.TotalChapters - 1)
+            {
+                _currentChapterIndex++;
+                await LoadCurrentChapter();
+            }
+            else
+            {
+                // Вместо DisplayAlert показываем наш ContentView
+                CustomAlert.IsVisible = true;
+            }
         }
+
+        // 2. Обработчик кнопки "Остаться"
+private void OnAlertCancelClicked(object sender, EventArgs e)
+{
+    CustomAlert.IsVisible = false;
+}
+
+// 3. Обработчик кнопки "В библиотеку"
+private async void OnAlertConfirmClicked(object sender, EventArgs e)
+{
+    CustomAlert.IsVisible = false;
+    await Navigation.PopAsync();
+}
 
         private async void OnPrevClicked(object sender, EventArgs e)
         {

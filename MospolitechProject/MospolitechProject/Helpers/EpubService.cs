@@ -13,14 +13,13 @@ namespace MospolitechProject.Helpers
 {
     public class EpubService
     {
-        // Список очищенных глав для отображения
-        public List<string> Chapters { get; set; } = new List<string>();
+        public List<(string Title, string Text)> Chapters { get; set; } = new List<(string, string)>();
 
         public async Task<Book> ParseEpubAsync(string filePath)
         {
             EpubBook epubBook = await EpubReader.ReadBookAsync(filePath);
 
-            // Наполняем список Chapters
+            // Передаем название всей книги в ExtractChapters для очистки дублей
             ExtractChapters(epubBook);
 
             string coverPath = null;
@@ -39,58 +38,99 @@ namespace MospolitechProject.Helpers
                 CoverUrl = coverPath,
                 FilePath = filePath,
                 IsReading = true,
-                Progress = 0
+                Progress = 0,
+                TotalChapters = Chapters.Count
             };
         }
 
         private void ExtractChapters(EpubBook book)
         {
             Chapters.Clear();
+            int counter = 1;
 
-            // Проходим по всем элементам книги в порядке чтения
             foreach (var resource in book.ReadingOrder)
             {
                 string html = resource.Content;
                 if (string.IsNullOrWhiteSpace(html)) continue;
 
-                // Очищаем HTML и получаем чистый текст
-                string cleanText = CleanHtml(html);
+                // Передаем book.Title в метод очистки
+                var (title, cleanText) = CleanHtmlAndExtractTitle(html, $"Глава {counter}", book.Title);
 
-                // Добавляем, если в главе есть хоть какой-то осмысленный текст
-                if (cleanText.Length > 10)
+                if (cleanText.Length > 50)
                 {
-                    Chapters.Add(cleanText);
+                    Chapters.Add((title, cleanText));
+                    counter++;
                 }
             }
         }
 
-        private string CleanHtml(string html)
+        private (string Title, string Text) CleanHtmlAndExtractTitle(string html, string fallbackTitle, string bookTitle)
         {
             try
             {
                 var doc = new HtmlDocument();
                 doc.LoadHtml(html);
 
-                // Удаляем технические теги (как в твоем Kotlin-коде)
-                var nodesToRemove = doc.DocumentNode.SelectNodes("//script|//style|//link|//meta");
-                if (nodesToRemove != null)
+                // 1. Удаляем скрипты и стили
+                var scripts = doc.DocumentNode.SelectNodes("//script|//style|//meta|//link");
+                if (scripts != null) foreach (var n in scripts) n.Remove();
+
+                // 2. Ищем и УДАЛЯЕМ заголовок главы (чтобы не было в тексте)
+                string extractedTitle = fallbackTitle;
+                var titleNode = doc.DocumentNode.SelectSingleNode("//h1|//h2|//h3|//h4|//b|//strong");
+
+                // Если не нашли h-теги, берем самый первый значимый блок
+                if (titleNode == null) titleNode = doc.DocumentNode.SelectSingleNode("//p|//div");
+
+                if (titleNode != null)
                 {
-                    foreach (var node in nodesToRemove) node.Remove();
+                    string pTitle = HtmlEntity.DeEntitize(titleNode.InnerText).Trim();
+                    if (pTitle.Length > 2 && pTitle.Length < 120)
+                    {
+                        extractedTitle = pTitle;
+                        titleNode.Remove(); // Удаляем узел из дерева
+                    }
                 }
 
-                // Извлекаем текст и декодируем спецсимволы (типа &nbsp;)
-                string text = HtmlEntity.DeEntitize(doc.DocumentNode.InnerText).Trim();
+                // 3. СОХРАНЯЕМ АБЗАЦЫ: Заменяем закрывающие теги блоков на переносы строк
+                var blockNodes = doc.DocumentNode.SelectNodes("//p|//div|//br|//h1|//h2|//h3");
+                if (blockNodes != null)
+                {
+                    foreach (var node in blockNodes)
+                    {
+                        // Вставляем перенос строки после каждого абзаца
+                        node.ParentNode.InsertAfter(doc.CreateTextNode("\n\n"), node);
+                    }
+                }
 
-                // Применяем твои регулярки для очистки от мусора
-                text = Regex.Replace(text, @"\d+/\d+", ""); // Номера страниц
-                text = Regex.Replace(text, @"\s+", " ");    // Лишние пробелы
+                // 4. Получаем текст с сохраненными переносами
+                string cleanText = HtmlEntity.DeEntitize(doc.DocumentNode.InnerText).Trim();
 
-                return text.Trim();
+                // 5. УДАЛЯЕМ НАЗВАНИЕ КНИГИ, если оно прилипло в начале (как на скриншоте)
+                if (!string.IsNullOrEmpty(bookTitle))
+                {
+                    // Отрезаем название книги, если текст с него начинается
+                    if (cleanText.StartsWith(bookTitle, StringComparison.OrdinalIgnoreCase))
+                    {
+                        cleanText = cleanText.Substring(bookTitle.Length).Trim();
+                    }
+                }
+
+                // 6. ФИНАЛЬНАЯ ЧИСТКА (твои регулярки)
+                cleanText = Regex.Replace(cleanText, @"\d+/\d+", ""); // Страницы
+                cleanText = Regex.Replace(cleanText, @"\d{1,2}:\d{2}", ""); // Время
+
+                // Схлопываем только горизонтальные пробелы, сохраняя наши \n (переносы)
+                cleanText = Regex.Replace(cleanText, @"[ \t]+", " ");
+
+                // Убираем лишние пустые строки (больше двух подряд)
+                cleanText = Regex.Replace(cleanText, @"(\n\s*){3,}", "\n\n");
+
+                return (extractedTitle, cleanText.Trim());
             }
             catch
             {
-                // Если HtmlAgilityPack не справился, просто чистим теги регуляркой
-                return Regex.Replace(html, "<.*?>", string.Empty).Trim();
+                return (fallbackTitle, Regex.Replace(html, "<.*?>", " ").Trim());
             }
         }
     }

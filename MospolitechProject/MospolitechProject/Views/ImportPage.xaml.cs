@@ -27,40 +27,47 @@ namespace MospolitechProject.Views
 
                 if (string.IsNullOrEmpty(localPath)) return;
 
-                // Включаем спиннер
                 LoadingLayout.IsVisible = true;
                 StatusLabel.Text = "Парсинг книги...";
 
                 var book = await _epubService.ParseEpubAsync(localPath);
+                book.TotalChapters = _epubService.Chapters.Count;
+                book.Progress = 0;
                 book.IsReading = true;
 
                 await _dbService.Init();
                 await _dbService.SaveBook(book);
 
-                var dbChapters = _epubService.Chapters.Select((text, index) => new Chapter
+                var dbChapters = _epubService.Chapters.Select((ch, index) => new Chapter
                 {
                     BookId = book.Id,
                     Index = index,
-                    Text = text
+                    Title = ch.Title,
+                    Text = ch.Text,
+                    IsCompleted = false
                 }).ToList();
 
                 await _dbService.InsertChapters(dbChapters);
 
-                // 1. ОСТАНАВЛИВАЕМ спиннер сразу после записи в БД
                 LoadingLayout.IsVisible = false;
 
-                // 2. Показываем успех
-                await DisplayAlert("Успех", $"Книга '{book.Title}' добавлена!", "ОК");
-
-                // 3. ПЕРЕХОДИМ в библиотеку
-                // Используем PopAsync для возврата по стеку навигации
-                await Navigation.PopAsync();
+                // ВМЕСТО DisplayAlert:
+                SuccessMessageLabel.Text = $"Книга '{book.Title}' добавлена в библиотеку!";
+                SuccessAlert.IsVisible = true;
             }
             catch (Exception ex)
             {
                 LoadingLayout.IsVisible = false;
+                // Ошибки можно оставить системными или сделать ErrorAlert по аналогии
                 await DisplayAlert("Ошибка импорта", ex.Message, "OK");
             }
+        }
+
+        // Обработчик кнопки в кастомном алерте
+        private async void OnSuccessConfirmClicked(object sender, EventArgs e)
+        {
+            SuccessAlert.IsVisible = false;
+            await Navigation.PopAsync(); // Возвращаемся в библиотеку
         }
 
     }

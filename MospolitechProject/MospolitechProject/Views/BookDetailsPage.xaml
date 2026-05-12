@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MospolitechProject.Views.BookDetailsPage"
+             BackgroundColor="#121212"
+             Title="{Binding CurrentBook.Title}">
+
+    <ScrollView>
+        <StackLayout Padding="20" Spacing="15">
+
+            <!-- Инфо о книге (оставляем как было) -->
+            <StackLayout Spacing="5">
+                <Label Text="{Binding CurrentBook.Title}" TextColor="White" FontSize="24" FontAttributes="Bold" />
+                <Label Text="{Binding CurrentBook.Author}" TextColor="Gray" FontSize="16" />
+            </StackLayout>
+
+            <!-- Статистика с расчетом времени -->
+            <Grid ColumnDefinitions="*, *" HeightRequest="60">
+                <StackLayout Grid.Column="0" HorizontalOptions="Center">
+                    <Label Text="{Binding CurrentBook.TotalChapters, StringFormat='{0} глав'}" TextColor="White" FontAttributes="Bold" />
+                    <Label Text="Всего глав" TextColor="Gray" FontSize="10" />
+                </StackLayout>
+                <StackLayout Grid.Column="1" HorizontalOptions="Center">
+                    <Label Text="{Binding EstimatedTime}" TextColor="White" FontAttributes="Bold" />
+                    <Label Text="Время чтения" TextColor="Gray" FontSize="10" />
+                </StackLayout>
+            </Grid>
+
+            <!-- Поисковая строка -->
+            <Frame BackgroundColor="#1E1E1E" Padding="10,0" CornerRadius="20" HasShadow="False">
+                <Entry Placeholder="Поиск по главам..." 
+                       PlaceholderColor="Gray" 
+                       TextColor="White" 
+                       TextChanged="OnSearchTextChanged" />
+            </Frame>
+
+            <!-- Табы (Фильтры) -->
+            <FlexLayout JustifyContent="SpaceBetween" Margin="0,10">
+                <Button Text="Все" BackgroundColor="{Binding AllTabColor}" TextColor="White" Clicked="OnFilterClicked" CommandParameter="Все" CornerRadius="15" HeightRequest="35"/>
+                <Button Text="Прочитано" BackgroundColor="{Binding ReadTabColor}" TextColor="White" Clicked="OnFilterClicked" CommandParameter="Прочитано" CornerRadius="15" HeightRequest="35"/>
+                <Button Text="Новые" BackgroundColor="{Binding NotReadTabColor}" TextColor="White" Clicked="OnFilterClicked" CommandParameter="Непрочитано" CornerRadius="15" HeightRequest="35"/>
+            </FlexLayout>
+
+            <Button Text="Продолжить чтение" TextColor="White" BackgroundColor="#6200EE" CornerRadius="25" Clicked="OnContinueClicked" />
+
+            <!-- Список глав с возможностью пометить как прочитанное (через Swipe) -->
+            <CollectionView ItemsSource="{Binding FilteredChapters}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <SwipeView BackgroundColor="#151515">
+                            <SwipeView.RightItems>
+                                <SwipeItems>
+                                    <SwipeItem Text="Прочитано" BackgroundColor="#03DAC5" 
+                                               Invoked="OnMarkAsReadInvoked" CommandParameter="{Binding .}"/>
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+
+                            <Frame BackgroundColor="#1E1E1E" Margin="0,4" Padding="15" CornerRadius="10" HasShadow="False">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnChapterTapped" CommandParameter="{Binding .}" />
+                                </Frame.GestureRecognizers>
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <Label Text="{Binding Index, StringFormat='{0}.'}" TextColor="Gray" VerticalOptions="Center" />
+                                    <Label Grid.Column="1" Text="{Binding Title}" TextColor="White" Margin="10,0" VerticalOptions="Center" />
+                                    <Label Grid.Column="2" Text="✓" TextColor="#03DAC5" IsVisible="{Binding IsCompleted}" />
+                                </Grid>
+                            </Frame>
+                        </SwipeView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+        </StackLayout>
+    </ScrollView>
+</ContentPage>

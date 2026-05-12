@@ -18,5 +18,15 @@ namespace MospolitechProject.Models
         public bool IsFavorite { get; set; }  // Для сердечка
         
         public string FilePath { get; set; }
+
+        // В файле Models/Book.cs добавьте:
+        public int TotalChapters { get; set; } // Общее кол-во глав в книге
+
+        [Ignore] // Этот параметр не идет в БД, он только для UI
+        public double ProgressPercent => TotalChapters > 0 ? (double)Progress / (TotalChapters - 1) : 0;
+
+        [Ignore]
+        public string ProgressText => TotalChapters > 0 ? $"{(int)(ProgressPercent * 100)}%" : "0%";
+
     }
 }

@@ -29,9 +29,12 @@ namespace MospolitechProject.Views
             var books = await _dbService.GetBooks();
             BooksCollection.ItemsSource = books;
 
-            // Статистика (динамическая)
-            ReadingCountLabel.Text = books.Count(b => b.IsReading).ToString();
+            // Обновляем статистику
             BooksCountLabel.Text = $"{books.Count} книг в библиотеке";
+            ReadingCountLabel.Text = books.Count(b => b.IsReading).ToString();
+
+            // ДОБАВЬТЕ ЭТУ СТРОКУ:
+            FinishedCountLabel.Text = books.Count(b => b.IsFinished).ToString();
         }
 
         // ОБЫЧНОЕ НАЖАТИЕ - ПЕРЕХОД
@@ -41,30 +44,33 @@ namespace MospolitechProject.Views
             var book = frame.BindingContext as Book;
             if (book != null)
             {
-                await Navigation.PushAsync(new ReaderPage(book));
+                // ТЕПЕРЬ ПЕРЕХОДИМ В ДЕТАЛИ
+                await Navigation.PushAsync(new BookDetailsPage(book.Id));
             }
         }
 
         // СВАЙП И УДАЛЕНИЕ
         private async void OnDeleteInvoked(object sender, EventArgs e)
         {
-            var swipeItem = sender as SwipeItem;
-            var book = swipeItem.CommandParameter as Book;
+            // ИСПРАВЛЕНИЕ: приводим к SwipeItemView, а не к SwipeItem
+            var swipeItem = sender as SwipeItemView;
+            if (swipeItem == null) return;
 
+            var book = swipeItem.CommandParameter as Book;
+            if (book == null) return;
+
+            // Дальше твой код без изменений
             bool confirm = await DisplayAlert("Удаление", $"Удалить книгу '{book.Title}'?", "Да", "Нет");
             if (confirm)
             {
-                // 1. Удаляем физические файлы (книгу и обложку)
                 if (!string.IsNullOrEmpty(book.FilePath) && File.Exists(book.FilePath))
                     File.Delete(book.FilePath);
 
                 if (!string.IsNullOrEmpty(book.CoverUrl) && File.Exists(book.CoverUrl))
                     File.Delete(book.CoverUrl);
 
-                // 2. Удаляем из БД
+                await _dbService.DeleteChapters(book.Id); // Не забываем удалять главы
                 await _dbService.DeleteBook(book);
-
-                // 3. Обновляем UI
                 await RefreshLibraryData();
             }
         }

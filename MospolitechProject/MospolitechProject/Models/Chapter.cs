@@ -10,5 +10,7 @@ namespace MospolitechProject.Models
         public int Index { get; set; }  // Номер главы
         public string Title { get; set; }
         public string Text { get; set; } // Текст главы
+
+        public bool IsCompleted { get; set; } = false;
     }
 }

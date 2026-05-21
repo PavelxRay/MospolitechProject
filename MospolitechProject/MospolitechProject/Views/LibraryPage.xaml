@@ -36,7 +36,6 @@
             <CollectionView x:Name="BooksCollection" Margin="15,5" SelectionMode="None">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <!-- Убираем внешний Frame, оставляем только SwipeView -->
                         <SwipeView BackgroundColor="Transparent">
                             <SwipeView.RightItems>
                                 <SwipeItems Mode="Reveal">
@@ -58,7 +57,6 @@
                             </SwipeView.RightItems>
 
                             <!-- Основная карточка книги -->
-                            <!-- Цвет делаем #1E1E1E, чтобы она выделялась на фоне #121212 -->
                             <Frame BackgroundColor="#1E1E1E" 
                CornerRadius="15" 
                Margin="8,4" 

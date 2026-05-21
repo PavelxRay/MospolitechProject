@@ -64,7 +64,7 @@ namespace MospolitechProject.Views
                     _currentBook.IsReading = false;
                 }
 
-                // ОДИН вызов сохранения в БД в конце метода
+                // Вызов сохранения в БД в конце метода
                 await _dbService.UpdateBook(_currentBook);
             }
         }
@@ -78,7 +78,6 @@ namespace MospolitechProject.Views
             }
             else
             {
-                // Вместо DisplayAlert показываем наш ContentView
                 CustomAlert.IsVisible = true;
             }
         }

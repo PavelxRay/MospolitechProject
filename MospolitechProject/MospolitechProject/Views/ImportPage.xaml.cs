@@ -50,8 +50,6 @@ namespace MospolitechProject.Views
                 await _dbService.InsertChapters(dbChapters);
 
                 LoadingLayout.IsVisible = false;
-
-                // ВМЕСТО DisplayAlert:
                 SuccessMessageLabel.Text = $"Книга '{book.Title}' добавлена в библиотеку!";
                 SuccessAlert.IsVisible = true;
             }

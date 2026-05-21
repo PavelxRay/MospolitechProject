@@ -32,7 +32,7 @@ namespace MospolitechProject.Services
 
         public Task<int> UpdateChapter(Chapter chapter) => _db.UpdateAsync(chapter);
 
-        // Добавленный метод для получения списка всех глав
+        // Метод для получения списка всех глав
         public Task<List<Chapter>> GetChaptersByBook(int bookId) =>
             _db.Table<Chapter>().Where(c => c.BookId == bookId).ToListAsync();
 

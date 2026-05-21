@@ -14,7 +14,7 @@ namespace MospolitechProject.ViewModels
         private readonly DatabaseService _dbService = new DatabaseService();
         private List<Chapter> _allChapters = new List<Chapter>();
         private string _searchText = "";
-        private string _selectedFilter = "Все"; // По умолчанию
+        private string _selectedFilter = "Все";
 
         public Book CurrentBook { get; set; }
         public ObservableCollection<Chapter> FilteredChapters { get; set; } = new ObservableCollection<Chapter>();
@@ -75,7 +75,7 @@ namespace MospolitechProject.ViewModels
         {
             chapter.IsCompleted = !chapter.IsCompleted;
             await _dbService.UpdateChapter(chapter);
-            ApplyFilters(); // Обновляем список сразу
+            ApplyFilters(); // Обновляем список
         }
     }
 }

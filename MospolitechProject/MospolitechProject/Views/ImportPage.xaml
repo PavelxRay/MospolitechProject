@@ -31,7 +31,7 @@
             </StackLayout>
         </StackLayout>
 
-        <!-- КАСТОМНЫЙ АЛЕРТ УСПЕХА -->
+        <!-- КАСТОМНЫЙ ПОПАП УСПЕХА -->
         <ContentView x:Name="SuccessAlert" IsVisible="False" BackgroundColor="#AA000000">
             <Frame VerticalOptions="Center" HorizontalOptions="Center" 
                    BackgroundColor="#1E1E1E" CornerRadius="20" Padding="25" WidthRequest="300">

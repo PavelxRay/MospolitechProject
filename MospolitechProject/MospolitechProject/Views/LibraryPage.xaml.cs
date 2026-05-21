@@ -33,7 +33,6 @@ namespace MospolitechProject.Views
             BooksCountLabel.Text = $"{books.Count} книг в библиотеке";
             ReadingCountLabel.Text = books.Count(b => b.IsReading).ToString();
 
-            // ДОБАВЬТЕ ЭТУ СТРОКУ:
             FinishedCountLabel.Text = books.Count(b => b.IsFinished).ToString();
         }
 
@@ -44,7 +43,6 @@ namespace MospolitechProject.Views
             var book = frame.BindingContext as Book;
             if (book != null)
             {
-                // ТЕПЕРЬ ПЕРЕХОДИМ В ДЕТАЛИ
                 await Navigation.PushAsync(new BookDetailsPage(book.Id));
             }
         }
@@ -52,14 +50,12 @@ namespace MospolitechProject.Views
         // СВАЙП И УДАЛЕНИЕ
         private async void OnDeleteInvoked(object sender, EventArgs e)
         {
-            // ИСПРАВЛЕНИЕ: приводим к SwipeItemView, а не к SwipeItem
             var swipeItem = sender as SwipeItemView;
             if (swipeItem == null) return;
 
             var book = swipeItem.CommandParameter as Book;
             if (book == null) return;
 
-            // Дальше твой код без изменений
             bool confirm = await DisplayAlert("Удаление", $"Удалить книгу '{book.Title}'?", "Да", "Нет");
             if (confirm)
             {
@@ -69,7 +65,7 @@ namespace MospolitechProject.Views
                 if (!string.IsNullOrEmpty(book.CoverUrl) && File.Exists(book.CoverUrl))
                     File.Delete(book.CoverUrl);
 
-                await _dbService.DeleteChapters(book.Id); // Не забываем удалять главы
+                await _dbService.DeleteChapters(book.Id);
                 await _dbService.DeleteBook(book);
                 await RefreshLibraryData();
             }

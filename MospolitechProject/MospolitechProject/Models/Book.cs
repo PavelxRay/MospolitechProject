@@ -12,14 +12,12 @@ namespace MospolitechProject.Models
         public string Description { get; set; }
         public int Progress { get; set; }
         
-        // Вот эти поля нужны для логики экранов:
-        public bool IsReading { get; set; }   // Пойдет в "Читаю сейчас"
-        public bool IsFinished { get; set; }  // Пойдет в "Прочитано"
-        public bool IsFavorite { get; set; }  // Для сердечка
+        public bool IsReading { get; set; }   // "Читаю сейчас"
+        public bool IsFinished { get; set; }  // "Прочитано"
+        public bool IsFavorite { get; set; }
         
         public string FilePath { get; set; }
 
-        // В файле Models/Book.cs добавьте:
         public int TotalChapters { get; set; } // Общее кол-во глав в книге
 
         [Ignore] // Этот параметр не идет в БД, он только для UI

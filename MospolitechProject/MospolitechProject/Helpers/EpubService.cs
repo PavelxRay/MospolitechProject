@@ -75,7 +75,7 @@ namespace MospolitechProject.Helpers
                 var scripts = doc.DocumentNode.SelectNodes("//script|//style|//meta|//link");
                 if (scripts != null) foreach (var n in scripts) n.Remove();
 
-                // 2. Ищем и УДАЛЯЕМ заголовок главы (чтобы не было в тексте)
+                // 2. Ищем и удаляем заголовок главы
                 string extractedTitle = fallbackTitle;
                 var titleNode = doc.DocumentNode.SelectSingleNode("//h1|//h2|//h3|//h4|//b|//strong");
 
@@ -92,7 +92,7 @@ namespace MospolitechProject.Helpers
                     }
                 }
 
-                // 3. СОХРАНЯЕМ АБЗАЦЫ: Заменяем закрывающие теги блоков на переносы строк
+                // 3. Сохраняем абзацы: Заменяем закрывающие теги блоков на переносы строк
                 var blockNodes = doc.DocumentNode.SelectNodes("//p|//div|//br|//h1|//h2|//h3");
                 if (blockNodes != null)
                 {
@@ -106,7 +106,7 @@ namespace MospolitechProject.Helpers
                 // 4. Получаем текст с сохраненными переносами
                 string cleanText = HtmlEntity.DeEntitize(doc.DocumentNode.InnerText).Trim();
 
-                // 5. УДАЛЯЕМ НАЗВАНИЕ КНИГИ, если оно прилипло в начале (как на скриншоте)
+                // 5. Удаляем название книги, в начале
                 if (!string.IsNullOrEmpty(bookTitle))
                 {
                     // Отрезаем название книги, если текст с него начинается
@@ -116,14 +116,14 @@ namespace MospolitechProject.Helpers
                     }
                 }
 
-                // 6. ФИНАЛЬНАЯ ЧИСТКА (твои регулярки)
+                // 6. Очищаем
                 cleanText = Regex.Replace(cleanText, @"\d+/\d+", ""); // Страницы
                 cleanText = Regex.Replace(cleanText, @"\d{1,2}:\d{2}", ""); // Время
 
-                // Схлопываем только горизонтальные пробелы, сохраняя наши \n (переносы)
+                // Схлопываем только горизонтальные пробелы, сохраняя наши переносы
                 cleanText = Regex.Replace(cleanText, @"[ \t]+", " ");
 
-                // Убираем лишние пустые строки (больше двух подряд)
+                // Убираем лишние пустые строки
                 cleanText = Regex.Replace(cleanText, @"(\n\s*){3,}", "\n\n");
 
                 return (extractedTitle, cleanText.Trim());

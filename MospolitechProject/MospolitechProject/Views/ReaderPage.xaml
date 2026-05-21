@@ -36,8 +36,7 @@
             </Grid>
         </Frame>
 
-        <!-- 3. КАСТОМНЫЙ АЛЕРТ (НОВЫЙ БЛОК) -->
-        <!-- RowSpan="2" растягивает его на всю высоту экрана поверх всего -->
+        <!-- 3. КАСТОМНЫЙ ПОПАП -->
         <ContentView x:Name="CustomAlert" Grid.RowSpan="2" IsVisible="False" BackgroundColor="#AA000000">
             <Frame VerticalOptions="Center" HorizontalOptions="Center" 
                    BackgroundColor="#1E1E1E" CornerRadius="20" Padding="25" WidthRequest="300" HasShadow="True">
